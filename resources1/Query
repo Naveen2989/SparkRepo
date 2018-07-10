@@ -1,0 +1,26 @@
+Score greater than 20
+====================== 
+select distinct(m.player_no), r.role, p.p_name from match1 m, role1 r, player1 p where m.player_no = r.player_no AND m.player_no = p.player_no  AND r.role in ('Batsman', 'Allrounder') AND m.player_no not in ( select player_no from match1 where runs < 20);
+
+Guy who scored 50+ in home ground
+==================================
+select m.match_no, m.player_no, m.runs, m.ground_no, g.place matchground, p.town homeground, p.p_name, p.team from match1 m, player1 p, ground1 g where m.player_no = p.player_no AND m.ground_no = g.ground_no  AND g.place = p.town AND runs > 50 order by player_no;
+
+
+Players who did not play even a single match
+=============================================
+select * from player1 where player_no not in (select distinct(p.player_no) from player1 p, match1 m where p.player_no = m.player_no order by player_no)
+
+
+oldest Guy who sco­red a century
+================================
+select m.*, p.p_name, p.dob from match1 m, player1 p where m.player_no = p.player_no AND runs > 99 order by STR_TO_DATE(dob,'%d-%m-%Y') limit 1;
+
+Leading wicket tak­er
+=====================
+select p.p_name, m.player_no, sum(m.wicket) totalwicket from match1 m, player1 p where m.player_no = p.player_no  group by p.p_name, m.player_no order by totalwicket desc limit 1;
+
+Leading run scorer
+====================
+select p.p_name, m.player_no, sum(m.runs) totalrun from match1 m, player1 p where m.player_no = p.player_no  group by p.p_name, m.player_no order by totalrun desc limit 1;
+

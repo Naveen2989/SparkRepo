@@ -1,0 +1,6 @@
+cd /home/samriddhi/Desktop/Spark/scala/sparkhbase/target/scala-2.11/
+spark-submit  sparkhbase_2.11-1.0.jar
+
+cd /home/samriddhi/Desktop/Spark/scala/sparkhbase/target/scala-2.11/
+sbt package
+sudo chmod -R 777 /home/samriddhi/Desktop/Spark/scala/sparkhbase/target/

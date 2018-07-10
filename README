@@ -1,0 +1,67 @@
+Approach No 1:
+
+Submit Spark Job in EMR cluster:  (https://blog.sqreen.io/amazon-emr-spark/)
+
+1) First we need to create Cluster on EMR(Graphically we can create)
+2) When we will create out cluster, there we need to create EMR role & EC2 instance profile. The role may not be selected by default 
+& we may need to create it using below command using awscli tool using below command:
+
+aws emr create-cluster \
+--name "My cluster" \
+--instance-type m3.xlarge \
+--release-label emr-5.4.0 \
+--instance-count 3\
+--use-default-roles \
+--applications Name=Spark
+
+3) Submitting jobs to the cluster via GUI. (https://blog.sqreen.io/amazon-emr-spark/)
+
+4) Above result we can acheive using awscli :
+
+[
+ {
+   "Name": "Spark application - test - 2",
+   "Type":"CUSTOM_JAR",
+   "Jar":"command-runner.jar",
+   "Args":
+   [
+     "spark-submit",
+     "--deploy-mode", "cluster",
+     "s3://sqreen-spark/spark.py",
+     "s3://sqreen-spark/input.json",
+     "s3://sqreen-spark/output-files"
+   ]
+ }
+]
+
+
+5) Now,In the same directory,we can now run:
+
+aws emr add-steps --cluster-id --steps file://step.json
+
+
+6) Approach NO2: (http://queirozf.com/entries/creating-a-spark-cluster-on-aws-emr-a-tutorial)
+
+7) Approach No3: To connect to the AWS Master Node node using PuTTY (https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-connect-master-node-ssh.html)
+
+8) In place of IP address & hostname >>>use hadoop@ec2-###-##-##-###.compute-1.amazonaws.com (MasterPublicDNS from EMR instance)
+
+Example viewing Cluster Status:
+
+aws emr describe-cluster --cluster-id j-1K48XXXXXXHCB (--cluster-id from the EMR cluster)
+
+9) Managing Spark Clusters on EMR using AWS CLI & SSH. (http://queirozf.com/entries/using-command-line-tools-to-manage-spark-clusters-on-emr-examples-and-reference)
+
+10) https://www.slideshare.net/AmazonWebServices/aws-summit-tel-aviv-data-science-best-practices-for-apache-spark-on-amazon-emr (Number of ways
+
+to submit Spark Job in AWS EMR cluster)
+
+11) https://www.slideshare.net/AmazonWebServices/aws-summit-tel-aviv-data-science-best-practices-for-apache-spark-on-amazon-emr (Using other 
+storage layers to submit saprk jobs)
+
+
+12) https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-connect-master-node-ssh.html 
+(Connect to the Master Node Using SSH and an Amazon EC2 Private Key on Linux, Unix, and Mac OS X)
+
+
+
