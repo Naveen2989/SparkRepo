@@ -347,3 +347,80 @@ Case Class: https://community.hortonworks.com/questions/136351/split-spark-dataf
 http://www.learn4master.com/big-data/pyspark/use-spark-to-calculate-moving-average-for-time-series-data (Aggregates, UDFs vs. Window functions)
 
 
+
+
+The following script loads this data and creates a DataFrame. Note that with Spark 2.0, this will be a bit easier. This is the Spark 1.6 solution.
+
+from pyspark import SparkContext
+from pyspark.sql import SQLContext, Row
+
+sc = SparkContext()
+sqlContext = SQLContext(sc)
+
+def processToRDD(line):
+    f = line.split(",")
+    return f
+
+myRDD = sc.textFile("file:///home/cloudera/Downloads/4lineCSV.txt").map(processToRDD)
+# myRDD.collect()
+
+def processToDF(rdd_line):
+    return(Row(ID=int(rdd_line[0]), name=rdd_line[1], age=int(rdd_line[2]), nFriends=int(rdd_line[3])))
+
+myRows = myRDD.map(processToDF)
+# myRows.collect()  # this is an RDD of Row objects now. Almost finished!
+
+myDF = sqlContext.createDataFrame(myRows)
+# or:
+myDF = myRows.toDF()
+myDF.show()  # pretty!
+
+# Working with DataFrames
+myDF.show()                             # top 20 rows
+myDF.select(myDF.ID, myDF.age)          # select columns
+myDF.filter(myDF.age > 30)              # filter rows
+myDF.groupBy('age').mean()              # aggregations
+
+myDF.rdd().map(mapFct)                  # transform back to RDD
+
+myDF.groupBy("age").count().orderBy("age").show()  # chained commands
+myDF.groupBy("age").agg({'nFriends': 'mean'}).show()  # "agg" knows avg, max, min, sum, count.
+
+>>>>>>>https://mapr.com/blog/using-apache-spark-dataframes-processing-tabular-data/
+
+//  SQLContext entry point for working with structured data
+val sqlContext = new org.apache.spark.sql.SQLContext(sc)
+// this is used to implicitly convert an RDD to a DataFrame.
+import sqlContext.implicits._
+// Import Spark SQL data types and Row.
+import org.apache.spark.sql._
+
+// load the data into a  new RDD
+val ebayText = sc.textFile("ebay.csv")
+
+//define the schema using a case class
+case class Auction(auctionid: String, bid: Float, bidtime: Float, bidder: String, bidderrate: Integer, openbid: Float, price: Float, item: String, daystolive: Integer)
+
+// create an RDD of Auction objects
+val ebay = ebayText.map(_.split(",")).map(p => Auction(p(0),p(1).toFloat,p(2).toFloat,p(3),p(4).toInt,p(5).toFloat,p(6).toFloat,p(7),p(8).toInt ))
+
+
+
+// change ebay RDD of Auction objects to a DataFrame
+val auction = ebay.toDF()
+
+The previous RDD transformations can also be written on one line like this:
+
+val auction = sc.textFile("ebay.csv").map(_.split(",")).map(p =>
+Auction(p(0),p(1).toFloat,p(2).toFloat,p(3),p(4).toInt,p(5).toFloat,p(6).toFloat,p(7),p(8).toInt )).toDF()
+
+
+auction.select("auctionid").distinct.count
+
+
+auction.groupBy("item", "auctionid").count.agg(min("count"), avg("count"),max("count")).show
+
+// Get the auctions with closing price > 100
+val highprice= auction.filter("price > 100")
+
+
