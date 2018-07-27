@@ -116,7 +116,60 @@ distinctTeams.distinct();
 
 
 
-val india_won_icc = 
+What has been the average Indian win or loss by Runs per year?
+
+One way:  average salary per location
+
+File1.csv(Column 4 is salary)
+
+Ram, 30, Engineer, 40000  
+Bala, 27, Doctor, 30000  
+Hari, 33, Engineer, 50000  
+Siva, 35, Doctor, 60000
+
+
+File2.csv(Column 2 is location)
+
+Hari, Bangalore  
+Ram, Chennai  
+Bala, Bangalore  
+Siva, Chennai  
+
+One way:
+
+val salary = sc.textFile("File1.csv").map(e => e.split(","))  
+val location = sc.textFile("File2.csv").map(e.split(","))  
+val joined = salary.map(e=>(e(0),e(3))).join(location.map(e=>(e(0),e(1)))  
+val joinedData = joined.sortByKey()  
+val finalData = joinedData.map(v => (v._1,v._2._1._1,v._2._2))  
+val aggregatedDF = finalData.map(e=> e.groupby(e(2)).agg(avg(e(1))))    
+aggregatedDF.repartition(1).saveAsTextFile("output.txt")  
+
+
+Another way:
+
+I would use DataFrame API, this should work:
+
+val salary = sc.textFile("File1.csv")
+               .map(e => e.split(","))
+               .map{case Seq(name,_,_,salary) => (name,salary)}
+               .toDF("name","salary")
+
+val location = sc.textFile("File2.csv")
+                 .map(e => e.split(","))
+                 .map{case Seq(name,location) => (name,location)}
+                 .toDF("name","location")
+
+import org.apache.spark.sql.functions._
+
+salary
+  .join(location,Seq("name"))
+  .groupBy($"location")
+  .agg(
+    avg($"salary").as("avg_salary")
+  )
+  .repartition(1)
+  .write.csv("output.csv")
 
 
 
@@ -259,9 +312,38 @@ Here is the percentage of first_bowl_won matches for each stadium
 (28,Newlands)
 
 
+Case Class:  http://community.simplilearn.com/threads/spark-calculating-percent-mean-median-etc.22740/
+
+1) val input = sc.textFile("/user/vshideler_gmail/project_1_data.csv")
+
+2) case class Bank(age:Int, job:String, marital:String, education:String, default:String, balance:Int, housing:String, loan:String, contact:String, day:String, month:String, duration:Int, campaign:Int, pdays:String, previous:Int, poutcome:String, y:String)
+
+3) val input_split = input.map(line => line.split(";"))
+
+4) val bankrdd = input_split.map(x => Bank(x(0).toInt, x(1), x(2), x(3), x(4), x(5).toInt, x(6), x(7), x(8), x(9), x(10), x(11).toInt, x(12).toInt, x(13), x(14).toInt, x(15), x(16)))
+
+5) val bankDF = bankrdd.toDF()
+
+6) val success = bankDF.filter($"poutcome" === "success")
+
+val successDF = success.toDF()
+
+val k = bankDF.count()
+
+val z = successDF.count()
+
+val x = k/z
 
 
+Mean using dataframe:
+
+import org.apache.spark.sql.functions._
+df.select(avg($"RBIs")).show()
 
 
+Case Class: https://community.hortonworks.com/questions/136351/split-spark-dataframe-and-calculate-average-based.html
+
+
+http://www.learn4master.com/big-data/pyspark/use-spark-to-calculate-moving-average-for-time-series-data (Aggregates, UDFs vs. Window functions)
 
 
